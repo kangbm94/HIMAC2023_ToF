@@ -1,0 +1,11 @@
+Time callibration parameter:
+ t_cor = 0.025 * ( tdc - ( p0 + p1 / sqrt(qdc - p2))  );
+please refer to the function "Correction" in HIMACAnal.hh
+parameter Map:
+	ch 2: BToF UL
+	ch 3: BToF UR
+	ch 4: BToF DL
+	ch 5: BToF DR
+	ch 8: SC 3mm L
+	ch 9: SC 3mm R
+Correction would not work with different parameter map.
