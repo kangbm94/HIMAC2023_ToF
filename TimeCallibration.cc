@@ -22,7 +22,9 @@ void DoPHCCallibration(TString filename){
 	tree_calib-> Branch("tdc",tdc,"tdc[16]/I");
 	tree_calib-> Branch("tdc_cor",tdc_cor,"tdc_cor[16]/D");
 
-	int ch[6] = {2,3,4,5,8,9};
+	int nch = 4;
+//	int ch[6] = {2,3,4,5,8,9};
+	int ch[6] = {2,3,4,5};
 	double p0[6],p1[6],p2[6],data[6];
 	
 	ifstream f2;
@@ -45,10 +47,9 @@ void DoPHCCallibration(TString filename){
 		for(int j=0;j<16;++j){
 			tdc_cor[j]=tdc[j];
 		}
-		for(int j=0;j<6;++j){
+		for(int j=0;j<nch;++j){
 			tdc_cor[ch[j]]=tdc[ch[j]]-Correction(qdc[ch[j]],p0[j],p1[j],p2[j]);
 		}
-		double TrigTime = (tdc_cor[ch[4]]+tdc_cor[ch[5]])/2;
 		tree_calib->Fill();
 	}
 	file_calib->Write();
@@ -267,7 +268,7 @@ void DoPHC(TString filename){
 #if 1
 	TCanvas*c4 = new TCanvas("c4","c4",1200,600);
 	double peaks[3],widths[3];
-	c4->Divide(3,2);
+	c4->Divide(3,1);
 	c4->cd(1);
 	ToFHistUAll->Draw();
 	ToFHistU->Draw("same");
@@ -302,14 +303,6 @@ void DoPHC(TString filename){
 	ToFHist->Fit("fGaussian","R");
 	peaks[2] = peak;
 	widths[2] = width;
-	c4->cd(4);
-	ToFCor ->Draw("colz");
-	c4->cd(5);
-	TDHistUAll ->Draw("");
-	TDHistU ->Draw("same");
-	c4->cd(6);
-	TDHistDAll ->Draw("");
-	TDHistD ->Draw("same");
 #endif
 	
 	TH1D* ToFHistUCut = new TH1D("HistToFUCut","HistToFUCut",500,-2,2);
@@ -354,11 +347,19 @@ void DoPHC(TString filename){
 		cout<<"params : "<<peaks[i]<<" , "<<widths[i]<<endl;
 	}
 	TCanvas*c5 = new TCanvas("c5","c5",1200,600);
-	c5->Divide(3,1);
+	c5->Divide(3,2);
 	c5->cd(1);
-	ToFCorCut->Draw("colz");
+	ToFCor ->Draw("colz");
 	c5->cd(2);
-	TDHistUCut->Draw("colz");
+	TDHistUAll ->Draw("");
+	TDHistU ->Draw("same");
 	c5->cd(3);
+	TDHistDAll ->Draw("");
+	TDHistD ->Draw("same");
+	c5->cd(4);
+	ToFCorCut->Draw("colz");
+	c5->cd(5);
+	TDHistUCut->Draw("colz");
+	c5->cd(6);
 	TDHistDCut->Draw("colz");
 }
