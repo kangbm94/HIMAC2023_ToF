@@ -3,6 +3,9 @@ double lsb = 0.025;
 double square(double x){
 	return x*x;
 }
+double Resolution(double s1, double s2, double s3){
+	return sqrt(s2*s2+s3*s3-s1*s1)/sqrt(2);
+}
 double Correction(double x, double p0, double p1,double p2){
 	return p0 + p1 * 1./sqrt(x-p2);
 }

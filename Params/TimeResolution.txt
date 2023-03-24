@@ -1,0 +1,4 @@
+#Seg #Res
+BToFU	111.893
+BToFD	126.652
+SC		151.199

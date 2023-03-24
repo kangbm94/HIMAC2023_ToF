@@ -13,6 +13,7 @@ void PositionAnal(){
 		PosTree[i] = (TTree*)PosFile[i]->Get("tree");
 	}
 	TString Titles[4] = {"BTOFUL","BTOFUR","BTOFDL","BTOFDR"};
+	TString TitlesT[3] = {"BToFUTime","BToFDTime","BToFD-U"};
 	TString XPos[7] = {"-50cm","-40cm","-20cm","+00cm","+20cm","+40cm","+50cm"};
 	double t1peak[7];
 	double t1width[7];
@@ -28,6 +29,7 @@ void PositionAnal(){
 	int ch[4] = {2,3,4,5};	
 	TH1D* PedHist[4];
 	TH1D* PosHist[4][7];
+	TH1D* PosTimeHist[3][7];
 	double PedPeak[4];
 	double PedWidth[4];
 	double PosPeak[4][7];
@@ -92,13 +94,15 @@ void PositionAnal(){
 //		AttenGraph[i]->SetMarkerSize(1);
 		for(int j=0;j<7;++j){
 			c3->cd(7*i+j+1);
+			//QDC Anal//
 			PosHist[i][j] = new TH1D(Titles[i]+XPos[j],Titles[i]+XPos[j],1500,0,1500);
 			TString command = Form("qdc[%d]>>"+Titles[i]+XPos[j],ch[i]);	
 			TCut cut = "tdc[2]+tdc[3]>0&&tdc[4]+tdc[5]>0";
 			TCut cutT1 =Form("abs(%f*(tdc_cor[2]+tdc_cor[3]-tdc_cor[8]-tdc_cor[9])/2-%f)<2*%f",lsb,t1peak[j],t1width[j]);
 			TCut cutT2 =Form("abs(%f*(tdc_cor[4]+tdc_cor[5]-tdc_cor[8]-tdc_cor[9])/2-%f)<2*%f",lsb,t2peak[j],t2width[j]);
 			TCut cutTD =Form("abs(%f*(tdc_cor[4]+tdc_cor[5]-tdc_cor[2]-tdc_cor[3])/2-%f)<2*%f",lsb,tdpeak[j],tdwidth[j]);
-			cut=cut&&cutT1&&cutT2&&cutTD;
+			TCut cutSCTD= Form("0.5*abs(%f*(tdc_cor[8]-tdc_cor[9]))<%f",lsb,0.3);
+			cut=cut&&cutT1&&cutT2&&cutTD&&cutSCTD;
 			PosTree[j]->Draw(command,cut);
 			fGaussian->SetRange(PedPeak[i]+nsig*PedWidth[i],1500);
 			PosHist[i][j]->Fit("fGaussian","QR");
@@ -116,6 +120,22 @@ void PositionAnal(){
 				PosPeakRat[i/2][j] = PosPeak[i][j]/PosPeak[i-1][j];
 				PosPeakRatErr[i/2][j] = PosPeakRat[i/2][j] * sqrt(square(PosPeakErr[i-1][j] /PosPeak[i-1][j])+square(PosPeakErr[i][j]/PosPeak[i-1][j]));
 			}
+			//QDC Anal//
+			//TDC Anal//
+			TCut cutraw = "tdc[2]+tdc[3]>0&&tdc[4]+tdc[5]>0";
+			if(i%2==1 ){
+				PosTimeHist[i/2][j] = new TH1D(TitlesT[i/2]+XPos[j],TitlesT[i/2]+XPos[j],800,-4,4);
+				TString commandt = Form("0.5*%f*(tdc_cor[%d]+tdc_cor[%d]-tdc_cor[8]-tdc_cor[9])>>"+TitlesT[i/2]+XPos[j],lsb,ch[i-1],ch[i]);	
+				//				PosTree[j]->Draw(commandt,cut);
+				PosTree[j]->Draw(commandt,cutSCTD&&cutraw,"0");
+//				PosTree[j]->Draw(commandt);
+			}
+			if(i==3 ){
+				PosTimeHist[2][j] = new TH1D(TitlesT[2]+XPos[j],TitlesT[2]+XPos[j],800,-4,4);
+				TString commandt = Form("0.5*%f*(tdc_cor[4]+tdc_cor[5]-tdc_cor[2]-tdc_cor[3])>>"+TitlesT[2]+XPos[j],lsb);	
+				PosTree[j]->Draw(commandt,cutSCTD&&cutraw,"0");
+			}
+			//TDC Anal//
 		}
 	}
 	for(int i=0;i<4;++i){
@@ -160,4 +180,53 @@ void PositionAnal(){
 	AttenGraph[5]->GetYaxis()->SetTitle("GainL/GainR");
 	AttenGraph[5]->GetYaxis()->SetRangeUser(0,5);
 	AttenGraph[5]->Fit("fExpo","R");
+	TCanvas* c5 = new TCanvas("c5","c5",200,200,800,600);
+	c5->Divide(2,1);
+	c5->cd(1);
+	AttenGraph[4]->Draw("AP");
+	AttenGraph[4]->SetTitle("BToFU_Attenuation");
+	AttenGraph[4]->GetXaxis()->SetTitle("Position [cm]");
+	AttenGraph[4]->GetYaxis()->SetTitle("GainR/GainL");
+	AttenGraph[4]->GetYaxis()->SetRangeUser(0,5);
+	AttenGraph[4]->Fit("fExpo","R");//No Reason to fit double expo
+	c5->cd(2);
+	AttenGraph[5]->Draw("AP");
+	AttenGraph[5]->SetTitle("BToFD_Attenuation");
+	AttenGraph[5]->GetXaxis()->SetTitle("Position [cm]");
+	AttenGraph[5]->GetYaxis()->SetTitle("GainR/GainL");
+	AttenGraph[5]->GetYaxis()->SetRangeUser(0,5);
+	AttenGraph[5]->Fit("fExpo","R");
+	double res [3][7];
+	double reserr [3][7];
+	double post [3][7];
+	double posterr [3][7];
+	TCanvas* c6 = new TCanvas("c6","c6",250,250,1000,600);
+	c6->Divide(7,3);
+	for(int j=0; j< 7;++j){
+		for(int i=0; i< 3;++i){
+				c6->cd(7*i+j+1);
+				PosTimeHist[i][j]->Draw();	
+				PosTimeHist[i][j]->Fit("fGaussian","Q");	
+				post[i][j]=fGaussian->GetParameter(1);
+				posterr[i][j]=fGaussian->GetParError(1);
+				res[i][j]=1000*fGaussian->GetParameter(2);
+				reserr[i][j]=1000*fGaussian->GetParError(2);
+			if(i==2){
+				cout<<"3-fold Resolution "<<"BToF U  = "<<Resolution(res[1][j],res[0][j],res[2][j])<<" ps , BToF D="
+					<<Resolution(res[0][j],res[1][j],res[2][j])<<" ps, SC "
+					<<Resolution(res[2][j],res[0][j],res[1][j])<<" ps"
+					<<endl;
+					res[i][j]=res[i][j]/sqrt(2);
+					reserr[i][j]=reserr[i][j]/sqrt(2);
+			}
+			cout<<"Resolution "<<TitlesT[i]<<" = "<<res[i][j]<<"+-"<<reserr[i][j]<<" ps"<<endl;
+		}
+	}
+	TCanvas* c7 = new TCanvas("c7","c7",300,300,1000,500);
+	TGraphErrors* ResGraph = new TGraphErrors(7,xpos[0],res[2],xposErr,reserr[2]);
+	ResGraph->Draw("AP");
+	ResGraph->SetTitle("BToF Timing resolution vs posion");
+	ResGraph->GetXaxis()->SetTitle("Position [cm]");
+	ResGraph->GetYaxis()->SetTitle("Timing resolution [ps]");
+	ResGraph->GetYaxis()->SetRangeUser(100,250);
 }

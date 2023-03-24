@@ -192,9 +192,9 @@ void DoPHC(TString filename){
 	TH1D* ToFHistD = new TH1D("HistToFD","HistToFD",500,-2,2);
 	TH1D* ToFHist = new TH1D("HistToF","HistToFD-U",500,-2,2);
 
-	TH1D* ToFHistUAll = new TH1D("HistAllToFU","HistAllToFU",500,-2,2);
-	TH1D* ToFHistDAll = new TH1D("HistAllToFD","HistAllToFD",500,-2,2);
-	TH1D* ToFHistAll = new TH1D("HistAllToFD-U","HistAllToFD-U",500,-2,2);
+	TH1D* ToFHistUAll = new TH1D("HistAllToFU","HistAllToFU",500,-5,5);
+	TH1D* ToFHistDAll = new TH1D("HistAllToFD","HistAllToFD",500,-5,5);
+	TH1D* ToFHistAll = new TH1D("HistAllToFD-U","HistAllToFD-U",500,-5,5);
 
 	TH1D* TDHistU = new TH1D("TimeDifferenceU","TimeDifferenceU",500,-5,5);
 	TH1D* TDHistD = new TH1D("TimeDifferenceD","TimeDifferenceD",500,-5,5);
