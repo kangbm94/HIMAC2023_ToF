@@ -14,6 +14,7 @@ void PositionAnal(){
 	}
 	TString Titles[4] = {"BTOFUL","BTOFUR","BTOFDL","BTOFDR"};
 	TString TitlesT[3] = {"BToFUTime","BToFDTime","BToFD-U"};
+	TString TitlesTD[3] = {"BToFUTD","BToFDTD","SCTD"};
 	TString XPos[7] = {"-50cm","-40cm","-20cm","+00cm","+20cm","+40cm","+50cm"};
 	double t1peak[7];
 	double t1width[7];
@@ -30,6 +31,7 @@ void PositionAnal(){
 	TH1D* PedHist[4];
 	TH1D* PosHist[4][7];
 	TH1D* PosTimeHist[3][7];
+	TH1D* PosTDHist[3][7];
 	double PedPeak[4];
 	double PedWidth[4];
 	double PosPeak[4][7];
@@ -125,9 +127,12 @@ void PositionAnal(){
 			TCut cutraw = "tdc[2]+tdc[3]>0&&tdc[4]+tdc[5]>0";
 			if(i%2==1 ){
 				PosTimeHist[i/2][j] = new TH1D(TitlesT[i/2]+XPos[j],TitlesT[i/2]+XPos[j],800,-4,4);
+				PosTDHist[i/2][j] = new TH1D(TitlesTD[i/2]+XPos[j],TitlesT[i/2]+XPos[j],800,-10,10);
 				TString commandt = Form("0.5*%f*(tdc_cor[%d]+tdc_cor[%d]-tdc_cor[8]-tdc_cor[9])>>"+TitlesT[i/2]+XPos[j],lsb,ch[i-1],ch[i]);	
+				TString commandtd = Form("0.5*%f*(tdc_cor[%d]-tdc_cor[%d])>>"+TitlesTD[i/2]+XPos[j],lsb,ch[i-1],ch[i]);	
 				//				PosTree[j]->Draw(commandt,cut);
 				PosTree[j]->Draw(commandt,cutSCTD&&cutraw,"0");
+				PosTree[j]->Draw(commandtd,cutSCTD&&cutraw,"0");
 //				PosTree[j]->Draw(commandt);
 			}
 			if(i==3 ){
@@ -229,4 +234,41 @@ void PositionAnal(){
 	ResGraph->GetXaxis()->SetTitle("Position [cm]");
 	ResGraph->GetYaxis()->SetTitle("Timing resolution [ps]");
 	ResGraph->GetYaxis()->SetRangeUser(100,250);
+	TCanvas* c8 = new TCanvas("c8","c8",350,350,1000,500);
+	c8->Divide(7,2);
+	double meanU[7];
+	double meanUerr[7];
+	double meanD[7];
+	double meanDerr[7];
+	for(int i=0;i<7;++i){
+		c8->cd(i+1);
+		PosTDHist[0][i]->Draw();	
+		PosTDHist[0][i]->Fit("fGaussian");
+		meanU[i]=fGaussian->GetParameter(1);
+		meanUerr[i]=fGaussian->GetParError(1);
+		c8->cd(i+8);
+		PosTDHist[1][i]->Draw();	
+		PosTDHist[1][i]->Fit("fGaussian");	
+		meanD[i]=fGaussian->GetParameter(1);
+		meanDerr[i]=fGaussian->GetParError(1);
+	}
+	fstream ft;
+	ft.open("Params/PositionParam.txt",fstream::out);
+	ft<<"# tD = 0.5*(tL-tR), x = p0 + p1 * tD"<<endl;
+	TCanvas* c9 = new TCanvas("c9","c9",400,400,800,400);
+	c9->Divide(2,1);
+	c9->cd(1);
+	TGraphErrors* TDPosU = new TGraphErrors(7,meanU,xpos[0],meanUerr,xposErr);
+	TDPosU->Draw("AP");
+	TDPosU->Fit("fPol1");
+	double p0 = fPol1->GetParameter(0);
+	double p1 = fPol1->GetParameter(1);
+	ft<<p0<<" , "<<p1<<endl;
+	c9->cd(2);	
+	TGraphErrors* TDPosD = new TGraphErrors(7,meanD,xpos[0],meanDerr,xposErr);
+	TDPosD->Draw("AP");
+	TDPosD->Fit("fPol1");
+	p0 = fPol1->GetParameter(0);
+	p1 = fPol1->GetParameter(1);
+	ft<<p0<<" , "<<p1<<endl;
 }

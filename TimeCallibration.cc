@@ -310,6 +310,7 @@ void DoPHC(TString filename){
 	TH1D* ToFHistCut = new TH1D("HistToFCut","HistToFD-UCut",500,-2,2);
 	TH1D* TDHistUCut = new TH1D("TimeDifferenceUCut","TimeDifferenceUCut",500,-5,5);
 	TH1D* TDHistDCut = new TH1D("TimeDifferenceDCut","TimeDifferenceDCut",500,-5,5);
+	TH1D* TDHistSC = new TH1D("TimeDifferenceSC","TimeDifferenceSC",500,-5,5);
 	
 	TH2D* ToFCorCut = new TH2D("HistToFU vs DCut","HistToFU vs DCut",100,-5,5,100,-5,5);
 
@@ -325,8 +326,8 @@ void DoPHC(TString filename){
 		double t1 = lsb*(tdc_cor[ch[0]]+tdc_cor[ch[1]])/2;	
 		double t2 = lsb*(tdc_cor[ch[1]]+tdc_cor[ch[2]])/2;	
 		double tt = lsb* TrigTime;
-	
 		if(tdc[ch[0]]+tdc[ch[1]]>0 and tdc[ch[2]]+tdc[ch[3]]>0 and tdc[ch[4]]+tdc[ch[5]]>0){
+			TDHistSC->Fill(lsb*(tdc_cor[ch[4]]-tdc_cor[ch[5]])/2.);	
 			if(1
 					and	(abs(qdc[ch[0]]-QMean[0])<nsig*QSig[0] 
 					and abs(qdc[ch[1]]-QMean[1])<nsig*QSig[1] 
@@ -362,4 +363,6 @@ void DoPHC(TString filename){
 	TDHistUCut->Draw("colz");
 	c5->cd(6);
 	TDHistDCut->Draw("colz");
+	TCanvas*c6 = new TCanvas("c6","c6",600,600);
+	TDHistSC->Draw();
 }

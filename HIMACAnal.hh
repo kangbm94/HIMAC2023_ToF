@@ -24,6 +24,7 @@ double Expo_(double* x,double* p){
 double ConjExpo_(double* x,double* p){
 	return sqrt(DoubleExpo(x[0],p[0],p[1],p[2],p[3])*DoubleExpo(x[0],p[0],-p[1],p[2],-p[3]));
 }
+TF1* fPol1 = new TF1("fPol1","pol1",-100,100);
 TF1* fCorrection = new TF1("fCorrection","Correction_",0,1000,3);
 TF1* fGaussian = new TF1("fGaussian","gaus",0,300);
 TF1* fLandau = new TF1("fLandau","landau",0,1500);
